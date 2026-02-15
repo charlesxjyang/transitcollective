@@ -55,9 +55,15 @@ export function TransitLineLayer() {
 
     return () => {
       m.off("style.load", addLayers);
-      if (m.getLayer("transit-lines-core")) m.removeLayer("transit-lines-core");
-      if (m.getLayer("transit-lines-glow")) m.removeLayer("transit-lines-glow");
-      if (m.getSource(SOURCE_ID)) m.removeSource(SOURCE_ID);
+      try {
+        if (m.getStyle()) {
+          if (m.getLayer("transit-lines-core")) m.removeLayer("transit-lines-core");
+          if (m.getLayer("transit-lines-glow")) m.removeLayer("transit-lines-glow");
+          if (m.getSource(SOURCE_ID)) m.removeSource(SOURCE_ID);
+        }
+      } catch {
+        // Map already removed during navigation
+      }
     };
   }, [map]);
 
