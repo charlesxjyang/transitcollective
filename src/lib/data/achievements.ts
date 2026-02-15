@@ -1,0 +1,68 @@
+import { Achievement } from "@/types/achievement";
+
+export const achievements: Achievement[] = [
+  {
+    id: "first-bond",
+    title: "First Stop",
+    description: "Purchase your first transit bond",
+    icon: "ticket",
+    category: "invest",
+    condition: { type: "first_purchase" },
+  },
+  {
+    id: "century-investor",
+    title: "Century Rider",
+    description: "Invest $100 or more in transit bonds",
+    icon: "banknote",
+    category: "invest",
+    condition: { type: "total_invested", threshold: 100 },
+  },
+  {
+    id: "grand-investor",
+    title: "Grand Central",
+    description: "Invest $1,000 or more in transit bonds",
+    icon: "landmark",
+    category: "invest",
+    condition: { type: "total_invested", threshold: 1000 },
+  },
+  {
+    id: "diversified",
+    title: "All Aboard",
+    description: "Invest in 3 different transit bonds",
+    icon: "git-branch",
+    category: "invest",
+    condition: { type: "bonds_purchased", threshold: 3 },
+  },
+  {
+    id: "portfolio-five",
+    title: "Transfer Station",
+    description: "Invest in 5 different transit bonds",
+    icon: "map-pin",
+    category: "invest",
+    condition: { type: "bonds_purchased", threshold: 5 },
+  },
+  {
+    id: "first-donation",
+    title: "Good Samaritan",
+    description: "Make your first community donation",
+    icon: "heart",
+    category: "donate",
+    condition: { type: "first_donation" },
+  },
+  {
+    id: "generous-donor",
+    title: "Transit Champion",
+    description: "Donate $50 or more to community projects",
+    icon: "trophy",
+    category: "donate",
+    condition: { type: "total_donated", threshold: 50 },
+  },
+  {
+    id: "multi-project",
+    title: "Community Builder",
+    description: "Donate to 3 different projects",
+    icon: "users",
+    category: "donate",
+    condition: { type: "projects_funded", threshold: 3 },
+  },
+];

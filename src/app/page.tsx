@@ -1,65 +1,160 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useCallback, useMemo } from "react";
+import { TransitMap } from "@/components/map/TransitMap";
+import { TransitLineLayer } from "@/components/map/TransitLineLayer";
+import { BondMarker } from "@/components/map/BondMarker";
+import { BondCard } from "@/components/invest/BondCard";
+import { BondDetailPanel } from "@/components/invest/BondDetailPanel";
+import { BuyModal } from "@/components/invest/BuyModal";
+import { PortfolioSummary } from "@/components/invest/PortfolioSummary";
+import { bonds } from "@/lib/data/bonds";
+import { CreditRatingGrade } from "@/types/bond";
+import { Button } from "@/components/ui/button";
+import { ArrowDownWideNarrow, ArrowUpWideNarrow } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type SortField = "community" | "rating" | "yield";
+type SortDir = "asc" | "desc";
+
+const ratingOrder: Record<CreditRatingGrade, number> = {
+  AAA: 1,
+  "AA+": 2,
+  AA: 3,
+  "AA-": 4,
+  "A+": 5,
+  A: 6,
+  "A-": 7,
+  "BBB+": 8,
+  BBB: 9,
+};
+
+export default function InvestPage() {
+  const [selectedBondId, setSelectedBondId] = useState<string | null>(null);
+  const [buyBondId, setBuyBondId] = useState<string | null>(null);
+  const [buyModalOpen, setBuyModalOpen] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("community");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const sortedBonds = useMemo(() => {
+    const sorted = [...bonds].sort((a, b) => {
+      switch (sortField) {
+        case "community":
+          return a.communityInvested - b.communityInvested;
+        case "rating":
+          return ratingOrder[a.rating.grade] - ratingOrder[b.rating.grade];
+        case "yield":
+          return a.yieldMax - b.yieldMax;
+      }
+    });
+    return sortDir === "desc" ? sorted.reverse() : sorted;
+  }, [sortField, sortDir]);
+
+  const selectedBond = bonds.find((b) => b.id === selectedBondId) ?? null;
+  const buyBond = bonds.find((b) => b.id === buyBondId) ?? null;
+
+  const handleSelectBond = useCallback((id: string) => {
+    setSelectedBondId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleBuy = useCallback(() => {
+    if (selectedBondId) {
+      setBuyBondId(selectedBondId);
+      setBuyModalOpen(true);
+    }
+  }, [selectedBondId]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortField(field);
+      setSortDir("desc");
+    }
+  };
+
+  const SortIcon = sortDir === "desc" ? ArrowDownWideNarrow : ArrowUpWideNarrow;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+      {/* Map */}
+      <div className="relative h-[50vh] shrink-0">
+        <TransitMap>
+          <TransitLineLayer />
+          {bonds.map((bond) => (
+            <BondMarker
+              key={bond.id}
+              bond={bond}
+              selected={bond.id === selectedBondId}
+              onClick={() => handleSelectBond(bond.id)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
+        </TransitMap>
+      </div>
+
+      {/* Cards below */}
+      <div className="flex-1 overflow-y-auto border-t border-border bg-background">
+        <div className="mx-auto max-w-3xl px-6 py-4">
+          <PortfolioSummary />
+          <div className="mt-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Transit Bonds ({bonds.length})
+              </h2>
+              <div className="flex items-center gap-1">
+                <span className="mr-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Sort
+                </span>
+                {(
+                  [
+                    { field: "community" as SortField, label: "Community" },
+                    { field: "rating" as SortField, label: "Rating" },
+                    { field: "yield" as SortField, label: "Yield" },
+                  ] as const
+                ).map(({ field, label }) => (
+                  <Button
+                    key={field}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-6 gap-1 rounded-full px-2 text-[10px]",
+                      sortField === field
+                        ? "bg-transit-teal/15 text-transit-teal hover:bg-transit-teal/20 hover:text-transit-teal"
+                        : ""
+                    )}
+                    onClick={() => handleSort(field)}
+                  >
+                    {label}
+                    {sortField === field && <SortIcon className="h-2.5 w-2.5" />}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-3 space-y-3">
+              {sortedBonds.map((bond) => (
+                <BondCard
+                  key={bond.id}
+                  bond={bond}
+                  selected={bond.id === selectedBondId}
+                  onClick={() => handleSelectBond(bond.id)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      <BondDetailPanel
+        bond={selectedBond}
+        onClose={() => setSelectedBondId(null)}
+        onBuy={handleBuy}
+      />
+
+      <BuyModal
+        bond={buyBond}
+        open={buyModalOpen}
+        onOpenChange={setBuyModalOpen}
+      />
     </div>
   );
 }
